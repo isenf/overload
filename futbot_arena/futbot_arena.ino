@@ -11,7 +11,7 @@ int const ultrasonic2[] = {6, 7};
 #define M_CS 10
 #define M_CLK 13
 #define NUM_MATRIZ 4
-#define TYPE_MATRIZ MD_MAX72XX::FC16HW
+#define HARDWARE_TYPE MD_MAX72XX::FC16_HW
 
 #define BOTAO_PAUSE 8
 #define BOTAO_RESET 9
@@ -19,7 +19,9 @@ int const ultrasonic2[] = {6, 7};
 #define D_DIO 2
 #define D_CLK 3
 
-MD_Parola placar = MD_Parola(TYPE_MATRIZ, M_DIN, M_CLK, M_CS, NUM_MATRIZ);
+MD_Parola placar = MD_Parola(HARDWARE_TYPE, M_DIN, M_CLK, M_CS, NUM_MATRIZ);
+//MD_MAX72XX  matriz(HARDWARE_TYPE, M_DIN, M_CLK, M_CS, NUM_MATRIZ); -> causa conflito
+
 TM1637Display display(D_CLK, D_DIO);
 
 Ultrasonic gol1(ultrasonic1[1], ultrasonic1[0]);
@@ -41,22 +43,21 @@ void setup() {
   pinMode(BOTAO_PAUSE, INPUT_PULLUP);
 
   Serial.begin(9600);
+  desenhaX();
+
 
 }
 
-/*
-matriz: din 11; cs 10; clk 13;
-display: dio 2; clk 3;
-
-gol 1: echo 4; trig 5;
-gol 2: echo 6; trig 7;
-
-botao pause: 8
-botao reset: 9
-
-*/
-
 void loop() {
-
   
+}
+
+//esta função funciona diferente no wokwi, forma um <>
+void desenhaX() {
+  MD_MAX72XX *mx = placar.getGraphicObject();
+  
+  for(int i = 0; i < 6; i++) {
+    mx->setPoint(1 + i, 13 + i, true);
+    mx->setPoint(1 + i, 18 - i, true);
+  }
 }
