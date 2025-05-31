@@ -19,7 +19,7 @@ int const ultrasonic2[] = {6, 7};
 #define D_DIO 2
 #define D_CLK 3
 
-MD_Parola placar = MD_Parola(TYPE_MATRIZ, DIN, CLK, CS, NUM_MATRIZ);
+MD_Parola placar = MD_Parola(TYPE_MATRIZ, M_DIN, M_CLK, M_CS, NUM_MATRIZ);
 TM1637Display display(D_CLK, D_DIO);
 
 Ultrasonic gol1(ultrasonic1[1], ultrasonic1[0]);
