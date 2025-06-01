@@ -34,6 +34,11 @@ byte pontos_dir = 0;
 
 float dist_gol1, dist_gol2;
 
+bool pausado = true;
+unsigned int segundos = 300;
+unsigned long ultimoTempo = 0;
+const unsigned int TEMPO_INICIAL = 300;
+
 const uint8_t numeros[10][5] = {
   {0x7E, 0x91, 0x89, 0x85, 0x7E}, 
   {0x01, 0x01, 0xFF, 0x41, 0x21}, 
@@ -56,7 +61,7 @@ void setup() {
   matriz = placar.getGraphicObject();
   matriz->control(MD_MAX72XX::INTENSITY, 8);
 
-  display.setBrightness(8);
+  display.setBrightness(15);
   display.clear();
 
   pinMode(BOTAO_RESET, INPUT_PULLUP);
@@ -71,16 +76,40 @@ void setup() {
 }
 
 void loop() {
-  dist_gol1 = gol1.distance();
-  dist_gol2 = gol2.distance();
+  dist_gol1 = gol1.distanceRead();
+  dist_gol2 = gol2.distanceRead();
 
-  if(dist_gol1 <= 6 || dist_gol2 <= 6){
-    if(dist_gol1 <= 6){
+  if(dist_gol1 <= DIST_CMP || dist_gol2 <= DIST_CMP){
+    if(dist_gol1 <= DIST_CMP){
       pontos_esq++;
-    } else if(dist_gol2 <= 6){
+    } else if(dist_gol2 <= DIST_CMP){
       pontos_dir++;
     }
     attPlacar();
+
+    while (gol1.distanceRead() <= DIST_CMP || gol2.distanceRead() <= DIST_CMP){
+      pausado = !pausado;
+    }
+  }
+
+  if(digitalRead(BOTAO_PAUSE) == LOW){
+    pausado = !pausado;
+    while(digitalRead(BOTAO_PAUSE) == LOW);
+  }
+
+  if(digitalRead(BOTAO_RESET) == LOW){
+    segundos = TEMPO_INICIAL;
+    ultimoTempo = millis();
+    attDisplay();
+    delay(300);
+  }
+
+  if(!pausado && segundos > 0 && millis() - ultimoTempo >= 1000){
+    ultimoTempo = millis();
+    segundos--;
+    attDisplay();
+
+    //if(segundos == 0) -> nao sei oq fazer aqui...
   }
 
 }
@@ -128,4 +157,10 @@ void desenhaNumero(uint8_t modulo, uint8_t numero){
       }
     }
   }
+}
+
+void attDisplay(){
+  uint8_t minutos = segundos / 60;
+  uint8_t segs = segundos % 60;
+  display.showNumberDecEx(minutos * 100 + segs, 0b01000000, true);
 }
