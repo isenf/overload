@@ -19,18 +19,20 @@ int const ultrasonic2[] = {6, 7};
 #define D_DIO 2
 #define D_CLK 3
 
+#define DIST_CMP 6
+
 MD_Parola placar = MD_Parola(HARDWARE_TYPE, M_DIN, M_CLK, M_CS, NUM_MATRIZ);
 MD_MAX72XX* matriz = nullptr;
-//MD_MAX72XX  matriz(HARDWARE_TYPE, M_DIN, M_CLK, M_CS, NUM_MATRIZ); -> causa conflito
 
 TM1637Display display(D_CLK, D_DIO);
 
 Ultrasonic gol1(ultrasonic1[1], ultrasonic1[0]);
 Ultrasonic gol2(ultrasonic2[1], ultrasonic2[0]);
 
-
-byte pontos_esq = 5;
+byte pontos_esq = 0;
 byte pontos_dir = 0;
+
+float dist_gol1, dist_gol2;
 
 const uint8_t numeros[10][5] = {
   {0x7E, 0x91, 0x89, 0x85, 0x7E}, 
@@ -69,15 +71,20 @@ void setup() {
 }
 
 void loop() {
-  pontos_esq++; pontos_dir++;
-  attPlacar();
+  dist_gol1 = gol1.distance();
+  dist_gol2 = gol2.distance();
 
-
-  delay(10000);
+  if(dist_gol1 <= 6 || dist_gol2 <= 6){
+    if(dist_gol1 <= 6){
+      pontos_esq++;
+    } else if(dist_gol2 <= 6){
+      pontos_dir++;
+    }
+    attPlacar();
+  }
 
 }
 
-//esta função funciona diferente no wokwi, forma um <>
 void desenhaX() {
   
   for(int i = 0; i < 6; i++) {
