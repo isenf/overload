@@ -98,16 +98,14 @@ void loop() {
   }
 
   if(digitalRead(BOTAO_RESET) == LOW){
-    segundos = TEMPO_INICIAL;
-    ultimoTempo = millis();
-    attDisplay();
-    delay(300);
+    resetaTempo();
+    resetaPlacar();
   }
 
   if(!pausado && segundos > 0 && millis() - ultimoTempo >= 1000){
-    ultimoTempo = millis();
-    segundos--;
-    attDisplay();
+  ultimoTempo = millis();
+  segundos--;
+  attDisplay();
 
     //if(segundos == 0) -> nao sei oq fazer aqui...
   }
@@ -130,7 +128,6 @@ void attPlacar(){
   desenhaNumero(3, pontos_esq);
 
   placar.displaySuspend(false);
-
 
 }
 
@@ -163,4 +160,18 @@ void attDisplay(){
   uint8_t minutos = segundos / 60;
   uint8_t segs = segundos % 60;
   display.showNumberDecEx(minutos * 100 + segs, 0b01000000, true);
+}
+
+void resetaTempo(){
+  segundos = TEMPO_INICIAL;
+  ultimoTempo = millis();
+  pausado = true;
+  attDisplay();
+
+}
+
+void resetaPlacar(){
+  pontos_esq = 0;
+  pontos_dir = 0;
+  attPlacar();
 }
