@@ -20,6 +20,7 @@ int const ultrasonic2[] = {6, 7};
 #define D_CLK 3
 
 MD_Parola placar = MD_Parola(HARDWARE_TYPE, M_DIN, M_CLK, M_CS, NUM_MATRIZ);
+MD_MAX72XX* matriz = nullptr;
 //MD_MAX72XX  matriz(HARDWARE_TYPE, M_DIN, M_CLK, M_CS, NUM_MATRIZ); -> causa conflito
 
 TM1637Display display(D_CLK, D_DIO);
@@ -27,14 +28,31 @@ TM1637Display display(D_CLK, D_DIO);
 Ultrasonic gol1(ultrasonic1[1], ultrasonic1[0]);
 Ultrasonic gol2(ultrasonic2[1], ultrasonic2[0]);
 
-byte pontos_esq = 0;
+
+byte pontos_esq = 5;
 byte pontos_dir = 0;
+
+const uint8_t numeros[10][5] = {
+  {0x7E, 0x91, 0x89, 0x85, 0x7E}, 
+  {0x01, 0x01, 0xFF, 0x41, 0x21}, 
+  {0x61, 0x91, 0x89, 0x85, 0x63}, 
+  {0x6E, 0x91, 0x91, 0x91, 0x81},
+  {0x08, 0xFF, 0x48, 0x28, 0x18}, 
+  {0x8E, 0x91, 0x91, 0x91, 0xF1}, 
+  {0x8E, 0x91, 0x91, 0x51, 0x3E}, 
+  {0xE0, 0x90, 0x88, 0x87, 0x80}, 
+  {0x6E, 0x91, 0x91, 0x91, 0x6E},
+  {0x7E, 0x91, 0x91, 0x91, 0x60}  
+};
 
 void setup() {
   placar.begin();
   placar.setIntensity(8);
   placar.displayClear();
   placar.displaySuspend(false);
+
+  matriz = placar.getGraphicObject();
+  matriz->control(MD_MAX72XX::INTENSITY, 8);
 
   display.setBrightness(8);
   display.clear();
@@ -43,21 +61,64 @@ void setup() {
   pinMode(BOTAO_PAUSE, INPUT_PULLUP);
 
   Serial.begin(9600);
+
   desenhaX();
+  attPlacar();
 
 
 }
 
 void loop() {
-  
+  pontos_esq++; pontos_dir++;
+  attPlacar();
+
+
+  delay(10000);
+
 }
 
 //esta função funciona diferente no wokwi, forma um <>
 void desenhaX() {
-  MD_MAX72XX *mx = placar.getGraphicObject();
   
   for(int i = 0; i < 6; i++) {
-    mx->setPoint(1 + i, 13 + i, true);
-    mx->setPoint(1 + i, 18 - i, true);
+    matriz->setPoint(1 + i, 13 + i, true);
+    matriz->setPoint(1 + i, 18 - i, true);
+  }
+
+}
+
+void attPlacar(){
+  placar.displaySuspend(true);
+
+  desenhaNumero(0, pontos_dir);
+  desenhaNumero(3, pontos_esq);
+
+  placar.displaySuspend(false);
+
+
+}
+
+void desenhaNumero(uint8_t modulo, uint8_t numero){
+  uint8_t col_inicial = modulo * 8;
+
+  for (uint8_t col = col_inicial; col < col_inicial + 8; col++) {
+    for (uint8_t row = 0; row < 8; row++) {
+      matriz->setPoint(row, col, false);
+    }
+  }
+
+  numero = numero % 10;
+
+
+  for (uint8_t col = 0; col < 5; col++) {
+    for (uint8_t row = 0; row < 8; row++) {
+      if (numeros[numero][col] & (1 << (7 - row))) {
+        if (modulo == 3) { 
+          matriz->setPoint(row, col_inicial + col + 2, true);
+        } else { 
+          matriz->setPoint(row, col_inicial + col + 1, true);
+        }      
+      }
+    }
   }
 }
