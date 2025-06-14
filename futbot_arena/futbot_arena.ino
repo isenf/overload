@@ -16,10 +16,10 @@ int const ultrasonic2[] = {6, 7};
 #define BOTAO_PAUSE 8
 #define BOTAO_RESET 9
 
-#define D_DIO 2
-#define D_CLK 3
+#define D_DIO 3
+#define D_CLK 2
 
-#define DIST_CMP 6
+#define DIST_CMP 4
 
 MD_Parola placar = MD_Parola(HARDWARE_TYPE, M_DIN, M_CLK, M_CS, NUM_MATRIZ);
 MD_MAX72XX* matriz = nullptr;
@@ -34,7 +34,7 @@ byte pontos_dir = 0;
 
 float dist_gol1, dist_gol2;
 
-bool pausado = true;
+bool pausado = false;
 unsigned int segundos = 300;
 unsigned long ultimoTempo = 0;
 const unsigned int TEMPO_INICIAL = 300;
@@ -72,18 +72,36 @@ void setup() {
   desenhaX();
   attPlacar();
 
+  delay(1000);
+
 
 }
 
 void loop() {
-  dist_gol1 = gol1.distanceRead();
-  dist_gol2 = gol2.distanceRead();
+
+  if(!pausado && segundos > 0 && millis() - ultimoTempo >= 1000){
+  ultimoTempo = millis();
+  segundos--;
+  attDisplay();
+
+  //if(segundos == 0) -> nao sei oq fazer aqui...
+  }
+
+  dist_gol1 = gol1.read();
+  dist_gol2 = gol2.read();
+
+  Serial.print(dist_gol1);
+  Serial.print("\t");
+  Serial.println(dist_gol2);
 
   if(dist_gol1 <= DIST_CMP || dist_gol2 <= DIST_CMP){
     if(dist_gol1 <= DIST_CMP){
       pontos_esq++;
-    } else if(dist_gol2 <= DIST_CMP){
+      Serial.println("Ponto esquerdo");
+    } 
+    if(dist_gol2 <= DIST_CMP){
       pontos_dir++;
+      Serial.println("Ponto direito");
     }
     attPlacar();
 
@@ -102,14 +120,7 @@ void loop() {
     resetaPlacar();
   }
 
-  if(!pausado && segundos > 0 && millis() - ultimoTempo >= 1000){
-  ultimoTempo = millis();
-  segundos--;
-  attDisplay();
-
-    //if(segundos == 0) -> nao sei oq fazer aqui...
-  }
-
+  delay(500);
 }
 
 void desenhaX() {
@@ -128,6 +139,7 @@ void attPlacar(){
   desenhaNumero(3, pontos_esq);
 
   placar.displaySuspend(false);
+
 
 }
 
