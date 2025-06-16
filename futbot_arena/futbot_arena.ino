@@ -2,7 +2,7 @@
 #include <MD_Parola.h>
 #include <MD_MAX72xx.h>
 #include <SPI.h>
-#include <TM1637Display.h>//nao eh certeza
+#include <TM1637Display.h>
 
 int const ultrasonic1[] = {4, 5};// echo, trig
 int const ultrasonic2[] = {6, 7}; 
@@ -84,15 +84,18 @@ void loop() {
   segundos--;
   attDisplay();
 
-  //if(segundos == 0) -> nao sei oq fazer aqui...
+  if(segundos == 0){
+    display.showNumberDecEx(0, 0b01000000, true);
+    piscaPlacar();
+  }
   }
 
   dist_gol1 = gol1.read();
   dist_gol2 = gol2.read();
 
-  Serial.print(dist_gol1);
-  Serial.print("\t");
-  Serial.println(dist_gol2);
+  // Serial.print(dist_gol1);
+  // Serial.print("\t");
+  // Serial.println(dist_gol2);
 
   if(dist_gol1 <= DIST_CMP || dist_gol2 <= DIST_CMP){
     if(dist_gol1 <= DIST_CMP){
@@ -143,6 +146,19 @@ void attPlacar(){
 
 }
 
+void piscaPlacar(){
+  static unsigned long piscada = 0;
+  const unsigned long intervalo = 250;
+
+  static bool statusPlacar = false;
+
+  if(millis() - piscada >= intervalo){
+    piscada = millis();
+    statusPlacar = !statusPlacar;
+    placar.displaySuspend(statusPlacar);
+  }
+}
+
 void desenhaNumero(uint8_t modulo, uint8_t numero){
   uint8_t col_inicial = modulo * 8;
 
@@ -169,9 +185,11 @@ void desenhaNumero(uint8_t modulo, uint8_t numero){
 }
 
 void attDisplay(){
-  uint8_t minutos = segundos / 60;
-  uint8_t segs = segundos % 60;
-  display.showNumberDecEx(minutos * 100 + segs, 0b01000000, true);
+  if(segundos > 0){
+    uint8_t minutos = segundos / 60;
+    uint8_t segs = segundos % 60;
+    display.showNumberDecEx(minutos * 100 + segs, 0b01000000, true);
+  }
 }
 
 void resetaTempo(){
