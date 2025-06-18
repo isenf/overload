@@ -16,8 +16,8 @@ int const ultrasonic2[] = {6, 7};
 #define BOTAO_PAUSE 8
 #define BOTAO_RESET 9
 
-#define D_DIO 3
-#define D_CLK 2
+#define D_DIO 2
+#define D_CLK 3
 
 #define DIST_CMP 4
 
@@ -35,9 +35,11 @@ byte pontos_dir = 0;
 float dist_gol1, dist_gol2;
 
 bool pausado = false;
-unsigned int segundos = 300;
+unsigned int segundos = 15;
 unsigned long ultimoTempo = 0;
-const unsigned int TEMPO_INICIAL = 300;
+const unsigned int TEMPO_INICIAL = 15;
+
+bool ta_over = false;
 
 const uint8_t numeros[10][5] = {
   {0x7E, 0x91, 0x89, 0x85, 0x7E}, 
@@ -80,37 +82,38 @@ void setup() {
 void loop() {
 
   if(!pausado && segundos > 0 && millis() - ultimoTempo >= 1000){
-  ultimoTempo = millis();
-  segundos--;
-  attDisplay();
+    ultimoTempo = millis();
+    segundos--;
+    attDisplay();
 
-  if(segundos == 0){
-    display.showNumberDecEx(0, 0b01000000, true);
-    piscaPlacar();
-  }
+    if(segundos == 0){
+      display.showNumberDecEx(0, 0b01000000, true);
+      piscaPlacar();
+      ta_over = !ta_over;
+    }
   }
 
   dist_gol1 = gol1.read();
   dist_gol2 = gol2.read();
 
-  // Serial.print(dist_gol1);
-  // Serial.print("\t");
-  // Serial.println(dist_gol2);
+  Serial.print(dist_gol1);
+  Serial.print("\t");
+  Serial.println(dist_gol2);
 
-  if(dist_gol1 <= DIST_CMP || dist_gol2 <= DIST_CMP){
+  if(!pausado && (dist_gol1 <= DIST_CMP || dist_gol2 <= DIST_CMP) && !ta_over){
     if(dist_gol1 <= DIST_CMP){
       pontos_esq++;
       Serial.println("Ponto esquerdo");
     } 
-    if(dist_gol2 <= DIST_CMP){
+    else if(dist_gol2 <= DIST_CMP){
       pontos_dir++;
       Serial.println("Ponto direito");
     }
     attPlacar();
 
-    while (gol1.distanceRead() <= DIST_CMP || gol2.distanceRead() <= DIST_CMP){
-      pausado = !pausado;
-    }
+    pausado = !pausado;
+    //while (gol1.distanceRead() <= DIST_CMP || gol2.distanceRead() <= DIST_CMP){
+    
   }
 
   if(digitalRead(BOTAO_PAUSE) == LOW){
@@ -121,6 +124,7 @@ void loop() {
   if(digitalRead(BOTAO_RESET) == LOW){
     resetaTempo();
     resetaPlacar();
+    ta_over = false;
   }
 
   delay(500);
