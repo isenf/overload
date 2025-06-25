@@ -88,9 +88,12 @@ void loop() {
 
     if(segundos == 0){
       display.showNumberDecEx(0, 0b01000000, true);
-      piscaPlacar();
       ta_over = !ta_over;
     }
+  }
+
+  if(ta_over) {
+    piscaPlacar();
   }
 
   dist_gol1 = gol1.read();
@@ -125,6 +128,9 @@ void loop() {
     resetaTempo();
     resetaPlacar();
     ta_over = false;
+    placar.displaySuspend(false);
+    matriz->control(MD_MAX72XX::INTENSITY, 8);
+
   }
 
   delay(500);
@@ -152,14 +158,14 @@ void attPlacar(){
 
 void piscaPlacar(){
   static unsigned long piscada = 0;
-  const unsigned long intervalo = 250;
-
-  static bool statusPlacar = false;
+  const unsigned long intervalo = 250; 
+  static bool estado = false;
 
   if(millis() - piscada >= intervalo){
     piscada = millis();
-    statusPlacar = !statusPlacar;
-    placar.displaySuspend(statusPlacar);
+    estado = !estado;
+    
+    matriz->control(MD_MAX72XX::INTENSITY, estado ? 8 : 0);
   }
 }
 
